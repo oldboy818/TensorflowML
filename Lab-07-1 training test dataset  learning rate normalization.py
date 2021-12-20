@@ -9,16 +9,26 @@
 #       format_version: '1.5'
 #       jupytext_version: 1.13.3
 #   kernelspec:
-#     display_name: Python 3 (ipykernel)
+#     display_name: Python [conda env:py37tf114]
 #     language: python
-#     name: python3
+#     name: conda-env-py37tf114-py
 # ---
 
 # # 모두를 위한 딥러닝 시즌2
 # ##  Lab 07-1 training test dataset  learning rate normalization
 
+# +
+import numpy as np
+import matplotlib.pyplot as plt
+# %matplotlib inline
 import tensorflow as tf
+import tensorflow.contrib.eager as tfe
+
+tf.compat.v1.enable_eager_execution()
+
+print(tf.__version__)
 from IPython.display import Image
+# -
 
 # ## Overshooting
 
@@ -74,10 +84,19 @@ Image("Lab-07/4.png")
 
 # 이때 $\lambda$를 regularization strength라고 부른다. 이 항을 추가해 더해줌으로써 $\theta$가 커지는 것에 대해 정규화(regularizaiton)해주는 효과를 가진다.
 
+# +
 import numpy as np
 import matplotlib.pyplot as plt
+# %matplotlib inline
 import tensorflow as tf
+import tensorflow.contrib.eager as tfe
 
+tf.compat.v1.enable_eager_execution()
+
+print(tf.__version__)
+
+
+# -
 
 # * Data Normalization 정의.
 
@@ -152,16 +171,16 @@ b = tf.Variable(tf.random.normal([1]), dtype=tf.float32)
 
 # * Linear Regression의 Hypothesis 정의
 
-def hypothesis(X):
-    return tf.matmul(X, W) + b
+def linearReg_fn(features):
+    hypothesis = tf.matmul(features, W) + b
+    return hypothesis
 
 
 # * Data Regularization을 고려한 l2_loss 함수 정의
 
-def l2_loss(cost, beta = 0.01):
+def l2_loss(loss, beta = 0.01):
     W_reg = tf.nn.l2_loss(W) # output = sum(t ** 2) / 2
-    loss = tf.reduce_mean(cost + W_reg * beta)
-    
+    loss = tf.reduce_mean(loss + W_reg * beta)
     return loss
 
 
@@ -170,12 +189,11 @@ def l2_loss(cost, beta = 0.01):
 
 # * Cost func을 정의
 
-def cost(hypothesis, features, labels, flag = False):
-    loss = tf.reduce_mean(tf.square(hypothesis - labels))
+def loss_fn(hypothesis, features, labels, flag = False):
+    cost = tf.reduce_mean(tf.square(hypothesis - labels))
     if(flag):
         cost = l2_loss(cost)
-    
-    return loss
+    return cost
 
 
 # * 학습을 위한 Hyper parameter에 대한 정의
@@ -187,13 +205,13 @@ starter_learning_rate = 0.1
 if(is_decay):
     global_step = tf.Variable(0, trainable=False)
     learning_rate = tf.compat.v1.train.exponential_decay(starter_learning_rate, global_step, 50, 0.96, staircase=True)
-    optimizer =  tf.compat.v1.train.GradientDescentOptimizer(learning_rate)
+    optimizer = tf.compat.v1.train.GradientDescentOptimizer(learning_rate)
 else:
-    optimizer = tf.train.GradientDescentOptimizer(learning_rate=starter_learning_rate)
+    optimizer = tf.compat.v1.train.GradientDescentOptimizer(learning_rate=starter_learning_rate)
 
-def grad(hypothesis, features, labels, flag = False):
+def grad(hypothesis, features, labels, l2_flag):
     with tf.GradientTape() as tape:
-        loss_value = cost(hypothesis(features),features,labels, flag)
+        loss_value = loss_fn(linearReg_fn(features),features,labels, l2_flag)
     return tape.gradient(loss_value, [W,b]), loss_value
 
 
@@ -201,14 +219,12 @@ def grad(hypothesis, features, labels, flag = False):
 EPOCHS = 101
 
 for step in range(EPOCHS):
-    for features, labels in dataset:
+    for features, labels  in tfe.Iterator(dataset):
         features = tf.cast(features, tf.float32)
         labels = tf.cast(labels, tf.float32)
-        grads, loss_value = grad(hypothesis(features), features, labels, False)
+        grads, loss_value = grad(linearReg_fn(features), features, labels, False)
         optimizer.apply_gradients(grads_and_vars=zip(grads,[W,b]), global_step=global_step)
-        
         if step % 10 == 0:
             print("Iter: {}, Loss: {:.4f}, Learning Rate: {:.8f}".format(step, loss_value, optimizer._learning_rate()))
 # -
-
 
