@@ -9,9 +9,9 @@
 #       format_version: '1.5'
 #       jupytext_version: 1.13.3
 #   kernelspec:
-#     display_name: Python 3 (ipykernel)
+#     display_name: Python [conda env:py37tf20]
 #     language: python
-#     name: python3
+#     name: conda-env-py37tf20-py
 # ---
 
 # # 모두를 위한 딥러닝 시즌2
@@ -65,10 +65,11 @@
 # 그렇다면 **Cost function**은 어떻게 될까?
 #
 # $$
-# CROSS-ENTROPY: D(S, L) = -\sum_{i}L_{i}log(S_i)\\
-# 이때, S는\ Softmax func의\ 출력값\ S(y)=\bar{y}이고\ L은\ 결과값\ Y이다.$$
+# CROSS-ENTROPY: D(S, L) = -\sum_{i}L_{i}log(S_i)$$
 #
-# softmax func을 hypothesis로 받아 구하는 cost functiond을 **Cross-entropy**라고 한다.\
+# 이때, S는 Softmax func의 출력값 $S(y)= bar{y}$이고 L은 결과값 Y이다.
+#
+# softmax func을 hypothesis로 받아 구하는 cost function을 **Cross-entropy**라고 한다.
 #
 # 왜 이 함수가 Cost func에 적합한지에 대해 알아보자.
 # $$
@@ -77,8 +78,9 @@
 #
 # ### Logistic cost VS cross entropy
 # $$
-# C:\ (H(x),y)\ =\ ylog(H(x))-(1-y)log(1-H(x))\\
-# VS\\
+# C:\ (H(x),y)\ =\ ylog(H(x))-(1-y)log(1-H(x))$$
+# VS
+# $$
 # D(S,L)\ =\ -\sum_{i}L_{i}log(S_i)$$
 #
 # 여러 개의 Training Set이 있을 때, cost func은 다음과 같다.
@@ -175,7 +177,7 @@ def grad_func(X,Y):
 # +
 # Optimization and Launch graph
 
-def fit(X, Y, epochs = 20000, verbose = 1000):
+def fit(X, Y, epochs = 2000, verbose = 100):
     
     #경사하강법으로 손실 함수를 최소화하는 모델 파라미터를 찾기 위한 class
     optimizer = tf.keras.optimizers.SGD(learning_rate = 0.01)
